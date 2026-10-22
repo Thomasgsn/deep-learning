@@ -1,0 +1,80 @@
+{
+  "name": "complete_cnn",
+  "model": "cnn",
+  "parameters": 305258,
+  "best_epoch": 30,
+  "best_validation_accuracy": 0.8736,
+  "best_validation_loss": 0.37182060508728026,
+  "training_seconds": 1339.0091807370045,
+  "inference_ms_per_image": 0.14867603279999458,
+  "peak_gpu_memory_mb": null,
+  "device": "mps",
+  "epochs_completed": 30,
+  "checkpoint": "checkpoints/complete_cnn/best.pt",
+  "config": {
+    "epochs": 30,
+    "batch_size": 128,
+    "patience": 8,
+    "scheduler": "cosine",
+    "augmentation": "standard",
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "weight_decay": 0.0005,
+    "name": "complete_cnn",
+    "model": "cnn",
+    "data_dir": "data",
+    "device": "auto"
+  },
+  "dataset": {
+    "train_size": 45000,
+    "validation_size": 5000,
+    "validation_fraction": 0.1,
+    "train_class_counts": {
+      "1": 4500,
+      "6": 4500,
+      "2": 4500,
+      "8": 4500,
+      "7": 4500,
+      "3": 4500,
+      "5": 4500,
+      "4": 4500,
+      "9": 4500,
+      "0": 4500
+    },
+    "validation_class_counts": {
+      "7": 500,
+      "2": 500,
+      "3": 500,
+      "9": 500,
+      "1": 500,
+      "8": 500,
+      "0": 500,
+      "5": 500,
+      "4": 500,
+      "6": 500
+    },
+    "class_names": [
+      "avion",
+      "automobile",
+      "oiseau",
+      "chat",
+      "cerf",
+      "chien",
+      "grenouille",
+      "cheval",
+      "bateau",
+      "camion"
+    ],
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "augmentation": "standard"
+  }
+}

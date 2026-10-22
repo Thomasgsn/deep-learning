@@ -1,0 +1,5 @@
+name,model,parameters,validation_accuracy,training_seconds,inference_ms_per_image,device
+exploration_resnet18,resnet18,11173962,0.5506,510.7489898019994,6.0294285244002825,mps
+exploration_wide_resnet,wide_resnet,2748890,0.482,391.1776206149989,4.885507297200093,mps
+exploration_cnn,cnn,305258,0.3808,124.63132377500006,0.9997240513999713,mps
+exploration_mlp,mlp,1707274,0.3632,45.320850591000635,0.07629526180026006,mps

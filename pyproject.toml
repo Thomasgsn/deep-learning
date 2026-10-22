@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cifar10-master-project"
+version = "0.1.0"
+description = "Benchmark reproductible de classification CIFAR-10 pour un projet de Mastère IA"
+requires-python = ">=3.11"
+dependencies = [
+  "torch>=2.2,<3", "torchvision>=0.17,<1", "numpy>=1.26,<2", "pandas>=2.1",
+  "matplotlib>=3.8", "seaborn>=0.13", "scikit-learn>=1.4", "tensorboard>=2.16"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"

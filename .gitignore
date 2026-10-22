@@ -1,0 +1,27 @@
+# Environnement et outils
+.venv/
+.idea/
+.vscode/
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.mplconfig/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Énoncé du cours (non redistribuable)
+.local/
+
+# Données CIFAR-10 : téléchargées automatiquement au premier lancement
+data/*
+!data/.gitkeep
+
+# Poids des modèles (44 Mo pour ResNet-18) : à régénérer avec les commandes du README.
+# Les summary.json et history.csv restent versionnés pour tracer les expériences.
+*.pt
+*.pth
+
+# Logs TensorBoard
+runs/
