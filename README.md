@@ -166,8 +166,8 @@ Le script lit [report/rapport.md](report/rapport.md), utilise les figures de `re
 
 ```text
 deep-learning/
-├── README.md                 # Point d'entrée de la remise
-├── report/                   # Rapport PDF final et source Markdown
+├── README.md
+├── report/                   # Rapport final PDF et Markdown
 ├── src/cifar10_project/      # Code Python du projet
 ├── configs/                  # Hyperparamètres des entraînements
 ├── checkpoints/              # history.csv et summary.json de chaque run
@@ -176,7 +176,7 @@ deep-learning/
 │   ├── metrics/              # Métriques JSON et matrice de confusion brute
 │   └── figures/              # Courbes, confusion, exemples et scores par classe
 ├── artifacts/                # Modèle final évaluable et manifeste
-├── scripts/                  # Vérification, export, benchmark et génération PDF
+├── scripts/                  # Vérification, export, benchmark
 ├── tests/                    # Tests automatisés
 ├── docs/                     # Audit technique complémentaire
 └── requirements*.txt         # Dépendances portables et environnement reproduit
@@ -209,9 +209,6 @@ Les fichiers JSON de [configs/](configs/) définissent les hyperparamètres sans
 
 [tests/test_core.py](tests/test_core.py) contient les tests automatisés ; [tests/conftest.py](tests/conftest.py) prépare leur environnement. L'[audit technique](docs/AUDIT_DEEP_LEARNING.md) est un document complémentaire, distinct du rapport remis.
 
-### Fichiers conservés dans Git
-
-Le dépôt inclut le rapport PDF, les configurations, les résultats, les historiques CSV/JSON et les poids du modèle final. Les données CIFAR-10, environnements Python, caches, fichiers TensorBoard et poids intermédiaires sont ignorés par `.gitignore`. Les deux journaux MPS historiques restent conservés pour documenter la reprise ancienne. Le téléchargement des données est automatique au premier lancement.
 
 ## Limites
 
@@ -219,4 +216,6 @@ Mon étude reste limitée à CIFAR-10, trois seeds pour les deux finalistes, 30 
 
 ## Usage de l'intelligence artificielle
 
-J'ai utilisé OpenAI Codex comme assistant pour auditer le dépôt, améliorer la robustesse du code, rédiger et interpréter les artefacts expérimentaux. Je l'ai laissé suivre les journaux pendant l'exécution des époques afin de relever les tendances et incidents éventuels. Les métriques du rapport proviennent exclusivement des JSON/CSV et checkpoints produits par le projet ; je les ai vérifiées par des tests et contrôles de cohérence. Le nom exact du modèle OpenAI doit être repris depuis l'interface utilisée au moment de la remise si l'établissement l'exige.
+> **GPT-6.1-Sol high**
+
+J'ai utilisé OpenAI Codex comme assistant pour auditer le dépôt, améliorer la robustesse du code, rédiger et interpréter les artefacts expérimentaux. Je l'ai laissé suivre les journaux pendant l'exécution des époques afin de relever les tendances et incidents éventuels. Les métriques du rapport proviennent exclusivement des JSON/CSV et checkpoints produits par le projet ; je les ai vérifiées par des tests et contrôles de cohérence.
