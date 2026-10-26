@@ -1,0 +1,260 @@
+{
+  "name": "complete_cuda_wide_resnet",
+  "checkpoint": "artifacts\\final_model.pt",
+  "checkpoint_sha256": "a9f98c2d9394ab450a2c1a97b776bc5641fa07ce78071f9572e71d05c28bf933",
+  "checkpoint_epoch": 29,
+  "selection_validation_metrics": {
+    "loss": 0.2194614357471466,
+    "accuracy": 0.9342
+  },
+  "dataset": "CIFAR-10 test officiel",
+  "n_test": 10000,
+  "accuracy": 0.9316,
+  "precision_macro": 0.9316978466718602,
+  "recall_macro": 0.9316000000000001,
+  "f1_macro": 0.9316064192936832,
+  "per_class": {
+    "avion": {
+      "precision": 0.9415911379657603,
+      "recall": 0.935,
+      "f1-score": 0.9382839939789263,
+      "support": 1000.0
+    },
+    "automobile": {
+      "precision": 0.9634748272458046,
+      "recall": 0.976,
+      "f1-score": 0.9696969696969697,
+      "support": 1000.0
+    },
+    "oiseau": {
+      "precision": 0.9084577114427861,
+      "recall": 0.913,
+      "f1-score": 0.9107231920199501,
+      "support": 1000.0
+    },
+    "chat": {
+      "precision": 0.848,
+      "recall": 0.848,
+      "f1-score": 0.848,
+      "support": 1000.0
+    },
+    "cerf": {
+      "precision": 0.9291338582677166,
+      "recall": 0.944,
+      "f1-score": 0.9365079365079365,
+      "support": 1000.0
+    },
+    "chien": {
+      "precision": 0.893,
+      "recall": 0.893,
+      "f1-score": 0.893,
+      "support": 1000.0
+    },
+    "grenouille": {
+      "precision": 0.9425173439048563,
+      "recall": 0.951,
+      "f1-score": 0.9467396714783475,
+      "support": 1000.0
+    },
+    "cheval": {
+      "precision": 0.96794208893485,
+      "recall": 0.936,
+      "f1-score": 0.9517031011692934,
+      "support": 1000.0
+    },
+    "bateau": {
+      "precision": 0.96318407960199,
+      "recall": 0.968,
+      "f1-score": 0.9655860349127182,
+      "support": 1000.0
+    },
+    "camion": {
+      "precision": 0.9596774193548387,
+      "recall": 0.952,
+      "f1-score": 0.9558232931726908,
+      "support": 1000.0
+    },
+    "accuracy": 0.9316,
+    "macro avg": {
+      "precision": 0.9316978466718602,
+      "recall": 0.9316000000000001,
+      "f1-score": 0.9316064192936832,
+      "support": 10000.0
+    },
+    "weighted avg": {
+      "precision": 0.9316978466718603,
+      "recall": 0.9316,
+      "f1-score": 0.9316064192936833,
+      "support": 10000.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      935,
+      5,
+      14,
+      9,
+      3,
+      0,
+      5,
+      6,
+      17,
+      6
+    ],
+    [
+      1,
+      976,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      19
+    ],
+    [
+      12,
+      0,
+      913,
+      23,
+      13,
+      15,
+      20,
+      1,
+      2,
+      1
+    ],
+    [
+      9,
+      3,
+      22,
+      848,
+      18,
+      61,
+      22,
+      11,
+      3,
+      3
+    ],
+    [
+      1,
+      0,
+      18,
+      16,
+      944,
+      7,
+      7,
+      7,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      10,
+      69,
+      16,
+      893,
+      3,
+      6,
+      0,
+      0
+    ],
+    [
+      3,
+      1,
+      16,
+      17,
+      5,
+      5,
+      951,
+      0,
+      1,
+      1
+    ],
+    [
+      6,
+      0,
+      8,
+      14,
+      16,
+      18,
+      0,
+      936,
+      0,
+      2
+    ],
+    [
+      16,
+      4,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      968,
+      8
+    ],
+    [
+      7,
+      24,
+      2,
+      3,
+      0,
+      0,
+      0,
+      0,
+      12,
+      952
+    ]
+  ],
+  "mean_confidence": 0.9576410797953606,
+  "negative_log_likelihood": 0.22690223455429076,
+  "expected_calibration_error_15_bins": 0.026526769775152233,
+  "inference_ms_per_image_end_to_end": 1.1755695299998479,
+  "peak_gpu_memory_mb": 920.025390625,
+  "device": "cuda",
+  "config": {
+    "data_dir": "data",
+    "output_dir": "checkpoints",
+    "device": "cuda",
+    "seed": 42,
+    "deterministic": false,
+    "validation_fraction": 0.1,
+    "batch_size": 128,
+    "workers": 2,
+    "epochs": 30,
+    "patience": 8,
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "nesterov": true,
+    "weight_decay": 0.0005,
+    "scheduler": "cosine",
+    "augmentation": "standard",
+    "mix": "none",
+    "mix_alpha": 1.0,
+    "label_smoothing": 0.0,
+    "tensorboard": true,
+    "model_kwargs": {
+      "widen_factor": 4,
+      "dropout": 0.0
+    },
+    "name": "complete_cuda_wide_resnet",
+    "model": "wide_resnet"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.14.1+cu132",
+    "torchvision": "0.29.1+cu132",
+    "cuda_runtime": "13.2",
+    "accelerator": "NVIDIA GeForce RTX 4060",
+    "git_commit": "4c4e22e65d76cb84765ae3ede5fdbfa349709ca4",
+    "git_dirty": true,
+    "source_tree_sha256": "518c3798329ae00ae5465fd424a51cb086eed65a0be092e59a4261b6e0e222a4",
+    "command": "E:\\cours\\deep-learning\\src\\cifar10_project\\evaluate.py artifacts\\final_model.pt --data-dir data --output-dir results\\metrics --device cuda"
+  }
+}

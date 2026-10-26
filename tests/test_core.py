@@ -5,11 +5,12 @@ from sklearn.metrics import accuracy_score, f1_score
 from torch.utils.data import DataLoader, TensorDataset
 
 from cifar10_project.dataset import TransformSubset, make_transforms, stratified_indices
-from cifar10_project.evaluate import evaluate_checkpoint
+from cifar10_project.evaluate import evaluate_checkpoint, expected_calibration_error
 from cifar10_project.models import build_model
-from cifar10_project.train import mixed_batch, train_model
+from cifar10_project.train import mixed_batch, resolve_config, train_model
 from cifar10_project.visualization import plot_comparison, plot_confusion, plot_history
-from cifar10_project.utils import count_parameters
+from cifar10_project.utils import count_parameters, source_tree_sha256
+from scripts.export_final_checkpoint import export_checkpoint
 
 
 def test_stratified_split_is_reproducible_and_balanced():
@@ -29,6 +30,11 @@ def test_models_forward_and_parameter_count():
         assert count_parameters(model) > 0
 
 
+def test_source_tree_hash_is_stable():
+    assert source_tree_sha256() == source_tree_sha256()
+    assert len(source_tree_sha256()) == 64
+
+
 def test_mixup_and_cutmix_preserve_shapes_and_labels():
     images, labels = torch.randn(4, 3, 32, 32), torch.tensor([0, 1, 2, 3])
     for method in ("mixup", "cutmix"):
@@ -42,6 +48,10 @@ def test_metrics_are_finite():
     truth, prediction = [0, 1, 1, 2], [0, 1, 2, 2]
     assert accuracy_score(truth, prediction) == .75
     assert 0 <= f1_score(truth, prediction, average="macro") <= 1
+
+
+def test_calibration_error_is_zero_for_perfect_calibration():
+    assert expected_calibration_error([1.0, 1.0], [True, True]) == 0.0
 
 
 def test_none_augmentation_is_deterministic_and_matches_evaluation():
@@ -91,6 +101,12 @@ def test_one_epoch_saves_and_reloads_best_checkpoint(tmp_path, monkeypatch):
     assert result["checkpoint"]
     assert (tmp_path / "checkpoints" / "unit_train" / "best.pt").exists()
     assert (tmp_path / "checkpoints" / "unit_train" / "history.csv").exists()
+    history = (tmp_path / "checkpoints" / "unit_train" / "history.csv").read_text(encoding="utf-8")
+    assert history.splitlines()[1].split(",")[1] == "0.001"
+    checkpoint = torch.load(tmp_path / "checkpoints" / "unit_train" / "best.pt", weights_only=False)
+    assert checkpoint["config"]["seed"] == 7
+    assert checkpoint["config"]["validation_fraction"] == 0.1
+    assert checkpoint["optimizer"] and checkpoint["scheduler"]
 
 
 def test_checkpoint_evaluation_writes_real_metrics(tmp_path, monkeypatch):
@@ -107,6 +123,23 @@ def test_checkpoint_evaluation_writes_real_metrics(tmp_path, monkeypatch):
     assert 0 <= result["f1_macro"] <= 1
     assert (tmp_path / "metrics" / "unit_eval_test.json").exists()
     assert (tmp_path / "metrics" / "unit_eval_confusion.npy").exists()
+
+
+def test_final_checkpoint_export_is_lightweight_and_hashed(tmp_path):
+    model = build_model("mlp")
+    source = tmp_path / "source.pt"
+    output = tmp_path / "final.pt"
+    torch.save({
+        "model": model.state_dict(),
+        "config": {"name": "unit", "model": "mlp", "model_kwargs": {}},
+        "epoch": 1,
+        "validation_metrics": {"loss": 1.0, "accuracy": .5},
+        "optimizer": {"large": "state intentionally omitted"},
+    }, source)
+    manifest = export_checkpoint(source, output)
+    exported = torch.load(output, weights_only=False)
+    assert output.exists() and output.with_suffix(".json").exists()
+    assert manifest["sha256"] and "optimizer" not in exported
 
 
 def test_result_plots_and_comparison_are_generated(tmp_path):
@@ -147,10 +180,20 @@ def test_mixup_training_accuracy_is_weighted_by_mix_ratio(monkeypatch):
 
     images, labels = torch.randn(4, 3, 32, 32), torch.tensor([0, 1, 2, 3])
     monkeypatch.setattr("cifar10_project.train.mixed_batch", lambda *args: (images, labels, labels.flip(0), 0.75))
-    model = nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
+    class FixedPredictions(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.offset = nn.Parameter(torch.tensor(0.0))
+
+        def forward(self, batch):
+            logits = torch.full((len(batch), 10), -10.0, device=batch.device)
+            logits[torch.arange(len(batch)), labels.to(batch.device)] = 10.0
+            return logits + self.offset
+
+    model = FixedPredictions()
     metrics = run_epoch(model, [(images, labels)], nn.CrossEntropyLoss(), torch.device("cpu"),
                         torch.optim.SGD(model.parameters(), lr=0.0), mix="mixup")
-    assert 0 <= metrics["accuracy"] <= 1
+    assert metrics["accuracy"] == .75
 
 
 def test_comparison_prefix_filters_phases(tmp_path):
@@ -162,3 +205,39 @@ def test_comparison_prefix_filters_phases(tmp_path):
             '"training_seconds":1.0,"inference_ms_per_image":0.2,"device":"cpu"}', encoding="utf-8")
     frame = plot_comparison(tmp_path / "checkpoints", tmp_path / "c.csv", prefix="complete_")
     assert list(frame.name) == ["complete_a"]
+
+
+def test_resolve_config_materializes_defaults_without_sharing_nested_state():
+    first = resolve_config({"name": "a", "model": "cnn"})
+    second = resolve_config({"name": "b", "model": "cnn"})
+    assert first["seed"] == 42 and first["validation_fraction"] == .1
+    first["model_kwargs"]["dropout"] = .2
+    assert second["model_kwargs"] == {}
+
+
+def test_early_stopping_uses_validation_loss(tmp_path, monkeypatch):
+    train_data = TensorDataset(torch.randn(4, 3, 32, 32), torch.arange(4))
+    loaders = (DataLoader(train_data, batch_size=4), DataLoader(train_data, batch_size=4))
+    monkeypatch.setattr(
+        "cifar10_project.train.get_train_validation_loaders",
+        lambda *args, **kwargs: (*loaders, {"train_size": 4, "validation_size": 4}),
+    )
+    values = iter([
+        {"loss": 1.2, "accuracy": .2}, {"loss": 1.0, "accuracy": .3},
+        {"loss": 1.1, "accuracy": .3}, {"loss": 1.1, "accuracy": .3},
+    ])
+    monkeypatch.setattr("cifar10_project.train.run_epoch", lambda *args, **kwargs: next(values))
+    monkeypatch.setattr(
+        "cifar10_project.train.benchmark_inference_details",
+        lambda *args, **kwargs: {"mean_ms_per_image": 1.0, "std_ms_per_image": 0.0,
+                                 "p95_ms_per_image": 1.0, "warmup_batches": 0,
+                                 "measured_batches": 1, "batch_size": 4,
+                                 "scope": "unit_test"},
+    )
+    result = train_model({
+        "name": "early_stop", "model": "mlp", "output_dir": str(tmp_path / "checkpoints"),
+        "device": "cpu", "epochs": 5, "patience": 1, "workers": 0, "tensorboard": False,
+        "scheduler": "none",
+    })
+    assert result["epochs_completed"] == 2
+    assert result["best_epoch"] == 1

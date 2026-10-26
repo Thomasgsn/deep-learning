@@ -14,7 +14,43 @@ from torch.utils.tensorboard import SummaryWriter
 
 from .dataset import get_train_validation_loaders
 from .models import build_model
-from .utils import choose_device, count_parameters, now, save_json, seed_everything
+from .utils import choose_device, count_parameters, now, runtime_metadata, save_json, seed_everything
+
+
+DEFAULT_CONFIG = {
+    "data_dir": "data",
+    "output_dir": "checkpoints",
+    "device": "auto",
+    "seed": 42,
+    "deterministic": False,
+    "validation_fraction": 0.1,
+    "batch_size": 128,
+    "workers": 2,
+    "epochs": 20,
+    "patience": 8,
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "nesterov": True,
+    "weight_decay": 5e-4,
+    "scheduler": "cosine",
+    "augmentation": "standard",
+    "mix": "none",
+    "mix_alpha": 1.0,
+    "label_smoothing": 0.0,
+    "tensorboard": False,
+    "model_kwargs": {},
+}
+
+
+def resolve_config(config: dict) -> dict:
+    """Fige toutes les valeurs par défaut afin qu'un run reste reproductible."""
+    missing = {"name", "model"} - set(config)
+    if missing:
+        raise ValueError(f"Configuration incomplète, clés manquantes : {sorted(missing)}")
+    resolved = {**DEFAULT_CONFIG, **config}
+    resolved["model_kwargs"] = dict(config.get("model_kwargs", {}))
+    return resolved
 
 
 def mixed_batch(images: torch.Tensor, labels: torch.Tensor, method: str, alpha: float):
@@ -67,6 +103,7 @@ def run_epoch(model, loader, criterion, device, optimizer=None, mix="none", mix_
 
 
 def train_model(config: dict) -> dict:
+    config = resolve_config(config)
     seed = int(config.get("seed", 42))
     # Algorithmes déterministes : ×2,5 plus lent sur MPS (mesuré sur ResNet-18), donc désactivés par défaut.
     seed_everything(seed, deterministic=bool(config.get("deterministic", False)))
@@ -82,8 +119,10 @@ def train_model(config: dict) -> dict:
     parameters = count_parameters(model)
     optimizer_name = config.get("optimizer", "sgd").lower()
     if optimizer_name == "sgd":
-        optimizer = torch.optim.SGD(model.parameters(), lr=config.get("learning_rate", .1), momentum=.9,
-                                    weight_decay=config.get("weight_decay", 5e-4), nesterov=True)
+        optimizer = torch.optim.SGD(
+            model.parameters(), lr=config["learning_rate"], momentum=config["momentum"],
+            weight_decay=config["weight_decay"], nesterov=config["nesterov"],
+        )
     elif optimizer_name == "adamw":
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.get("learning_rate", 1e-3),
                                       weight_decay=config.get("weight_decay", 1e-4))
@@ -100,12 +139,11 @@ def train_model(config: dict) -> dict:
     start = now()
     for epoch in range(1, epochs + 1):
         epoch_start = now()
+        learning_rate_used = optimizer.param_groups[0]["lr"]
         train_metrics = run_epoch(model, train_loader, criterion, device, optimizer,
                                   config.get("mix", "none"), float(config.get("mix_alpha", 1.0)))
         val_metrics = run_epoch(model, val_loader, criterion, device)
-        if scheduler:
-            scheduler.step()
-        row = {"epoch": epoch, "learning_rate": optimizer.param_groups[0]["lr"],
+        row = {"epoch": epoch, "learning_rate": learning_rate_used,
                "train_loss": train_metrics["loss"], "train_accuracy": train_metrics["accuracy"],
                "validation_loss": val_metrics["loss"], "validation_accuracy": val_metrics["accuracy"],
                "epoch_seconds": now() - epoch_start}
@@ -116,10 +154,15 @@ def train_model(config: dict) -> dict:
                     writer.add_scalar(key, value, epoch)
         print(f"[{config['name']}] {epoch:03d}/{epochs} train_acc={row['train_accuracy']:.4f} "
               f"val_acc={row['validation_accuracy']:.4f} val_loss={row['validation_loss']:.4f}")
+        if scheduler:
+            scheduler.step()
         if val_metrics["loss"] < best_loss:
             best_loss, stale = val_metrics["loss"], 0
             torch.save({"model": model.state_dict(), "config": config, "epoch": epoch,
-                        "validation_metrics": val_metrics, "dataset_info": dataset_info}, output_dir / "best.pt")
+                        "validation_metrics": val_metrics, "dataset_info": dataset_info,
+                        "optimizer": optimizer.state_dict(),
+                        "scheduler": scheduler.state_dict() if scheduler else None,
+                        "history": history}, output_dir / "best.pt")
         else:
             stale += 1
         if stale >= patience:
@@ -137,28 +180,61 @@ def train_model(config: dict) -> dict:
         writer_csv.writerows(history)
     best = torch.load(output_dir / "best.pt", map_location=device, weights_only=False)
     model.load_state_dict(best["model"])
-    inference = benchmark_inference(model, val_loader, device)
+    inference = benchmark_inference_details(model, val_loader, device)
     result = {"name": config["name"], "model": config["model"], "parameters": parameters,
               "best_epoch": best["epoch"], "best_validation_accuracy": best["validation_metrics"]["accuracy"],
               "best_validation_loss": best["validation_metrics"]["loss"], "training_seconds": elapsed,
-              "inference_ms_per_image": inference, "peak_gpu_memory_mb": torch.cuda.max_memory_allocated(device) / 2**20 if device.type == "cuda" else None,
+              "inference_ms_per_image": inference["mean_ms_per_image"], "inference_benchmark": inference,
+              "peak_gpu_memory_mb": torch.cuda.max_memory_allocated(device) / 2**20 if device.type == "cuda" else None,
               "device": str(device), "epochs_completed": len(history), "checkpoint": str(output_dir / "best.pt"),
-              "config": config, "dataset": dataset_info}
+              "config": config, "dataset": dataset_info, "environment": runtime_metadata()}
     save_json(output_dir / "summary.json", result)
     return result
 
 
-def benchmark_inference(model, loader, device) -> float:
-    model.eval()
-    examples, start = 0, now()
-    with torch.inference_mode():
-        for images, _ in loader:
-            images = images.to(device)
-            model(images)
-            examples += len(images)
+def _synchronize_device(device) -> None:
     if device.type == "cuda":
         torch.cuda.synchronize(device)
-    return (now() - start) * 1000 / max(examples, 1)
+    elif device.type == "mps" and hasattr(torch, "mps"):
+        torch.mps.synchronize()
+
+
+def benchmark_inference_details(model, loader, device, warmup_batches: int = 5,
+                                measure_batches: int = 30) -> dict:
+    """Mesure le modèle seul, après transfert, avec warm-up et synchronisation."""
+    model.eval()
+    batches = []
+    for images, _ in loader:
+        batches.append(images.to(device, non_blocking=True))
+        if len(batches) >= measure_batches:
+            break
+    if not batches:
+        raise ValueError("Le loader d'inférence est vide.")
+    with torch.inference_mode():
+        for index in range(warmup_batches):
+            model(batches[index % len(batches)])
+        _synchronize_device(device)
+        durations = []
+        for images in batches:
+            _synchronize_device(device)
+            start = now()
+            model(images)
+            _synchronize_device(device)
+            durations.append((now() - start) * 1000 / len(images))
+    return {
+        "mean_ms_per_image": float(np.mean(durations)),
+        "std_ms_per_image": float(np.std(durations)),
+        "p95_ms_per_image": float(np.percentile(durations, 95)),
+        "warmup_batches": warmup_batches,
+        "measured_batches": len(batches),
+        "batch_size": int(len(batches[0])),
+        "scope": "model_only_after_device_transfer",
+    }
+
+
+def benchmark_inference(model, loader, device) -> float:
+    """Compatibilité avec les scripts historiques."""
+    return benchmark_inference_details(model, loader, device)["mean_ms_per_image"]
 
 
 def main() -> None:

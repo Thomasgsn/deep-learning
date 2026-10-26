@@ -16,19 +16,24 @@ def run_phase(phase: str, data_dir="data", device="auto", epochs: int | None = N
                   "scheduler": "cosine", "augmentation": "standard", "optimizer": "adamw", "learning_rate": .001}
     elif phase == "complete":
         models = [("cnn", "cnn"), ("resnet18", "resnet18"), ("wide_resnet", "wide_resnet")]
-        common = {"epochs": epochs or 40, "batch_size": 128, "patience": 8, "scheduler": "cosine",
+        common = {"epochs": epochs or 30, "batch_size": 128, "patience": 8, "scheduler": "cosine",
                   "augmentation": "standard", "optimizer": "sgd", "learning_rate": .1, "weight_decay": 5e-4}
     elif phase == "optimisation":
-        models = [("resnet18", "resnet18")]
-        # Trois essais à un facteur près : configuration de référence, MixUp/label smoothing,
-        # puis AdamW. Ils restent comparés sur la même validation et le test reste isolé.
-        base = {"epochs": epochs or 50, "batch_size": 128, "patience": 10, "scheduler": "cosine",
-                "augmentation": "standard", "optimizer": "sgd", "learning_rate": .1, "weight_decay": 5e-4}
-        variants = [("ref", base), ("mixup", {**base, "mix": "mixup", "mix_alpha": .2, "label_smoothing": .05}),
-                    ("adamw", {**base, "optimizer": "adamw", "learning_rate": .001, "weight_decay": .01})]
+        # Recherche courte sur 4 000 images. Chaque variante ne modifie qu'un facteur,
+        # puis seule la meilleure configuration doit être confirmée sur le train complet.
+        base = {"epochs": epochs or 10, "train_limit": 4000, "batch_size": 128,
+                "patience": epochs or 10, "scheduler": "cosine", "augmentation": "standard",
+                "optimizer": "sgd", "learning_rate": .1, "weight_decay": 5e-4,
+                "mix": "none", "label_smoothing": 0.0}
+        variants = [
+            ("ref", base),
+            ("mixup", {**base, "mix": "mixup", "mix_alpha": .2}),
+            ("label_smoothing", {**base, "label_smoothing": .1}),
+        ]
         results = []
         for name, config in variants:
-            full = {**config, "name": f"optim_{name}", "model": "resnet18", "data_dir": data_dir, "device": device}
+            full = {**config, "name": f"optim_subset_{name}", "model": "resnet18",
+                    "data_dir": data_dir, "device": device}
             results.append(train_model(full))
         save_json(Path("results/metrics") / "optimisation_runs.json", results)
         return results

@@ -72,6 +72,25 @@ def plot_confusion(metrics_path: str | Path, output: str | Path):
     plt.close(fig)
 
 
+def plot_per_class_metrics(metrics_path: str | Path, output: str | Path):
+    result = json.loads(Path(metrics_path).read_text(encoding="utf-8"))
+    rows = []
+    for class_name in CLASS_NAMES:
+        metrics = result["per_class"][class_name]
+        rows.append({"classe": class_name, "précision": metrics["precision"],
+                     "rappel": metrics["recall"], "F1": metrics["f1-score"]})
+    frame = pd.DataFrame(rows).set_index("classe")
+    ax = frame.plot(kind="bar", figsize=(11, 4.5), ylim=(0, 1), color=["#4c78a8", "#f58518", "#54a24b"])
+    ax.set(title=f"Métriques par classe — {result['name']}", ylabel="Score", xlabel="Classe")
+    ax.grid(axis="y", alpha=.25)
+    ax.legend(loc="lower right")
+    plt.xticks(rotation=25, ha="right")
+    plt.tight_layout()
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output, dpi=160)
+    plt.close()
+
+
 def plot_comparison(results_dir="checkpoints", output="results/comparisons/model_comparison.csv", prefix=""):
     """`prefix` restreint la comparaison à une phase (ex. « complete_ ») pour ne pas mélanger les protocoles."""
     rows = []
@@ -91,12 +110,27 @@ def plot_comparison(results_dir="checkpoints", output="results/comparisons/model
         raise FileNotFoundError(f"Aucun summary.json trouvé dans {results_dir}; lancez d'abord des entraînements.")
     frame = pd.DataFrame(rows).sort_values("validation_accuracy", ascending=False)
     frame.to_csv(out, index=False)
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.bar(frame.name, frame.validation_accuracy, color="#4776a8")
-    ax.set_ylim(0, 1)
-    ax.set_ylabel("Accuracy validation")
-    ax.tick_params(axis="x", rotation=25)
-    ax.set_title("Comparaison sur validation (test absent sauf évaluation finale)")
+    labels = frame.name.str.replace("_", " ", regex=False)
+    fig, axes = plt.subplots(2, 2, figsize=(11, 8))
+    panels = [
+        ("validation_accuracy", "Accuracy validation", 1.0, "#4776a8"),
+        ("parameters", "Paramètres (millions)", None, "#72a050"),
+        ("training_seconds", "Temps d'entraînement (minutes)", None, "#d07c3e"),
+        ("inference_ms_per_image", "Inférence modèle (ms/image)", None, "#8d6cab"),
+    ]
+    values_by_panel = [
+        frame.validation_accuracy, frame.parameters / 1e6,
+        frame.training_seconds / 60, frame.inference_ms_per_image,
+    ]
+    for ax, (column, title, upper, color), values in zip(axes.flat, panels, values_by_panel):
+        bars = ax.bar(labels, values, color=color)
+        if upper is not None:
+            ax.set_ylim(0, upper)
+        ax.set_title(title)
+        ax.tick_params(axis="x", rotation=30)
+        ax.grid(axis="y", alpha=.2)
+        ax.bar_label(bars, fmt="%.2f", padding=2, fontsize=8)
+    fig.suptitle("Comparaison sur validation — test réservé à l'évaluation finale")
     fig.tight_layout()
     fig.savefig(out.with_suffix(".png"), dpi=160)
     plt.close(fig)
@@ -121,18 +155,20 @@ def plot_prediction_examples(checkpoint_path, data_dir="data", output="results/f
             tensor = PILToTensor()(image)
             tensor = ((tensor - torch.tensor(mean)[:, None, None]) / torch.tensor(std)[:, None, None]).unsqueeze(0).to(device)
             logits = model(tensor)
+            probabilities = logits.softmax(1)
             prediction = int(logits.argmax(1).item())
+            confidence = float(probabilities[0, prediction].item())
             if (prediction != label) == errors:
-                found.append((np.asarray(image), label, prediction))
+                found.append((np.asarray(image), label, prediction, confidence))
                 if len(found) >= count:
                     break
     if not found:
         raise ValueError("Aucun exemple correspondant trouvé.")
     cols = min(5, len(found)); rows = int(np.ceil(len(found) / cols))
     fig, axes = plt.subplots(rows, cols, figsize=(2.4 * cols, 2.7 * rows), squeeze=False)
-    for ax, (image, label, prediction) in zip(axes.flat, found):
+    for ax, (image, label, prediction, confidence) in zip(axes.flat, found):
         ax.imshow(image)
-        ax.set_title(f"Vrai : {CLASS_NAMES[label]}\nPrédit : {CLASS_NAMES[prediction]}", fontsize=9)
+        ax.set_title(f"Vrai : {CLASS_NAMES[label]}\nPrédit : {CLASS_NAMES[prediction]} ({confidence:.0%})", fontsize=9)
         ax.axis("off")
     for ax in axes.flat[len(found):]: ax.axis("off")
     fig.suptitle("Erreurs de classification" if errors else "Prédictions correctes")

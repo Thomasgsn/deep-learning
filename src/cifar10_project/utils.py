@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import json
-import os
+import hashlib
+import platform
 import random
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -46,6 +49,72 @@ def choose_device(requested: str = "auto") -> torch.device:
 
 def count_parameters(model: torch.nn.Module) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def file_sha256(path: str | Path) -> str:
+    """Calcule l'empreinte d'un artefact sans le charger entièrement en mémoire."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def source_tree_sha256(root: str | Path = ".") -> str:
+    """Empreinte stable du code Python effectivement présent dans le dépôt."""
+    root = Path(root).resolve()
+    files = sorted(
+        path for directory in (root / "src", root / "scripts")
+        if directory.exists()
+        for path in directory.rglob("*.py")
+    )
+    digest = hashlib.sha256()
+    for path in files:
+        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def runtime_metadata() -> dict[str, Any]:
+    """Versions et matériel nécessaires à la traçabilité d'une expérience."""
+    try:
+        import torchvision
+        torchvision_version = torchvision.__version__
+    except Exception:
+        torchvision_version = "indisponible"
+    try:
+        repository = Path.cwd().resolve().as_posix()
+        commit = subprocess.run(
+            ["git", "-c", f"safe.directory={repository}", "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True, timeout=5,
+        ).stdout.strip()
+        dirty = bool(subprocess.run(
+            ["git", "-c", f"safe.directory={repository}", "status", "--porcelain"],
+            capture_output=True, text=True, check=True, timeout=5,
+        ).stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        commit = "indisponible"
+        dirty = None
+    if torch.cuda.is_available():
+        accelerator = torch.cuda.get_device_name(0)
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        accelerator = "Apple MPS"
+    else:
+        accelerator = "CPU"
+    return {
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "torch": torch.__version__,
+        "torchvision": torchvision_version,
+        "cuda_runtime": torch.version.cuda,
+        "accelerator": accelerator,
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "source_tree_sha256": source_tree_sha256(),
+        "command": " ".join(sys.argv),
+    }
 
 
 def save_json(path: str | Path, payload: Any) -> None:

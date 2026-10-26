@@ -1,0 +1,4 @@
+name,model,parameters,validation_accuracy,training_seconds,inference_ms_per_image,device
+optim_subset_ref,resnet18,11173962,0.3112,65.74830230000043,0.13375518229376362,cuda
+optim_subset_mixup,resnet18,11173962,0.3042,52.60258519999843,0.13386817708370322,cuda
+optim_subset_label_smoothing,resnet18,11173962,0.2914,54.75260259999959,0.1333636979149825,cuda

@@ -1,5 +1,10 @@
 # Environnement et outils
 .venv/
+.python/
+.uv-cache/
+.pytest-tmp/
+.pytest-tmp*/
+.tmp/
 .idea/
 .vscode/
 .DS_Store
@@ -10,8 +15,12 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
+.env
+.env.*
+!.env.example
 
-# Énoncé du cours (non redistribuable)
 .local/
 
 # Données CIFAR-10 : téléchargées automatiquement au premier lancement
@@ -22,6 +31,28 @@ data/*
 # Les summary.json et history.csv restent versionnés pour tracer les expériences.
 *.pt
 *.pth
+!artifacts/final_model.pt
+!artifacts/final_model.json
 
 # Logs TensorBoard
 runs/
+
+# Fichiers temporaires de génération ; le PDF final est dans report/.
+output/
+
+# Ne conserver que les historiques et résumés des expériences.
+checkpoints/*
+!checkpoints/README.md
+!checkpoints/*/
+checkpoints/*/*
+!checkpoints/*/history.csv
+!checkpoints/*/summary.json
+
+# Livrable final uniquement ; les poids intermédiaires restent locaux.
+artifacts/*
+!artifacts/final_model.pt
+!artifacts/final_model.json
+
+# Nouveaux journaux locaux. Les deux journaux historiques déjà suivis restent
+# conservés, notamment pour scripts/finish_resnet18.py.
+logs/*

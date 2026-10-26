@@ -1,0 +1,38 @@
+{
+  "selection_rule": "Architecture sélectionnée sur la moyenne de l'accuracy de validation; seed 42 conservée pour le test afin d'éviter le cherry-picking.",
+  "seeds": [42, 123, 2026],
+  "standard_deviation": "sample (ddof=1)",
+  "source_tree_sha256": "518c3798329ae00ae5465fd424a51cb086eed65a0be092e59a4261b6e0e222a4",
+  "models": {
+    "wide_resnet": {
+      "runs": ["complete_cuda_wide_resnet", "complete_cuda_wide_resnet_seed123", "complete_cuda_wide_resnet_seed2026"],
+      "validation_accuracy": [0.9342, 0.935, 0.9328],
+      "validation_accuracy_mean": 0.934,
+      "validation_accuracy_std": 0.0011135528725660512,
+      "validation_loss_mean": 0.21204804509282113,
+      "validation_loss_std": 0.008441990747491433,
+      "training_seconds_mean": 527.3415100000002,
+      "training_seconds_std": 9.382576410580636,
+      "inference_ms_per_image_batch128_mean": 0.10403495659703468,
+      "inference_ms_per_image_batch128_std": 0.0016813442828500283,
+      "peak_gpu_memory_mb": 1036.29638671875
+    },
+    "resnet18": {
+      "runs": ["complete_cuda_resnet18_ref", "complete_cuda_resnet18_seed123", "complete_cuda_resnet18_seed2026"],
+      "validation_accuracy": [0.9334, 0.9314, 0.9274],
+      "validation_accuracy_mean": 0.9307333333333333,
+      "validation_accuracy_std": 0.0030550504633038962,
+      "validation_loss_mean": 0.24002122214833896,
+      "validation_loss_std": 0.009776352568789394,
+      "training_seconds_mean": 704.4947843999986,
+      "training_seconds_std": 10.480043678314193,
+      "inference_ms_per_image_batch128_mean": 0.13501748263912028,
+      "inference_ms_per_image_batch128_std": 0.000920132809998702,
+      "peak_gpu_memory_mb": 2268.9931640625
+    }
+  },
+  "selected_architecture": "wide_resnet",
+  "selected_checkpoint": "artifacts/final_model.pt",
+  "selected_seed": 42,
+  "test_used_for_selection": false
+}

@@ -1,0 +1,4 @@
+model,parameters,validation_accuracy_mean,validation_accuracy_std,training_seconds_mean,inference_ms_per_image_batch128,peak_gpu_memory_mb,test_accuracy,test_f1_macro
+CNN,305258,0.8714,,217.1589237,0.0137962760,364.09716797,,
+WideResNet-16-4,2748890,0.9340,0.0011135529,527.3415100,0.1040349566,1036.29638672,0.9316,0.9316064193
+ResNet-18,11173962,0.9307333333,0.0030550505,704.4947844,0.1350174826,2268.99316406,,

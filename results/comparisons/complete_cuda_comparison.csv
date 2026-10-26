@@ -1,0 +1,8 @@
+name,model,parameters,validation_accuracy,training_seconds,inference_ms_per_image,device,test_accuracy,test_f1_macro
+complete_cuda_wide_resnet_seed123,wide_resnet,2748890,0.935,522.2983855000002,0.10504270833138207,cuda,,
+complete_cuda_wide_resnet,wide_resnet,2748890,0.9342,521.5589822000002,0.10209398437647603,cuda,0.9316,0.9316064192936832
+complete_cuda_resnet18_ref,resnet18,11173962,0.9334,696.4472260999992,0.13423869791561552,cuda,,
+complete_cuda_wide_resnet_seed2026,wide_resnet,2748890,0.9328,538.1671623000002,0.10496817708324595,cuda,,
+complete_cuda_resnet18_seed123,resnet18,11173962,0.9314,716.3453712999981,0.13603278645935765,cuda,,
+complete_cuda_resnet18_seed2026,resnet18,11173962,0.9274,700.6917557999986,0.13478096354238764,cuda,,
+complete_cuda_cnn,cnn,305258,0.8714,217.15892370000074,0.01379627603910194,cuda,,

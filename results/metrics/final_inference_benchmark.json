@@ -1,0 +1,39 @@
+{
+  "checkpoint": "artifacts/final_model.pt",
+  "checkpoint_sha256": "a9f98c2d9394ab450a2c1a97b776bc5641fa07ce78071f9572e71d05c28bf933",
+  "device": "cuda",
+  "measurements": {
+    "1": {
+      "mean_ms_per_image": 2.015873999989708,
+      "std_ms_per_image": 0.07950690761699197,
+      "p95_ms_per_image": 2.1943050014670007,
+      "warmup_batches": 10,
+      "measured_batches": 50,
+      "batch_size": 1,
+      "scope": "model_only_after_device_transfer",
+      "peak_gpu_memory_mb": 296.048828125
+    },
+    "128": {
+      "mean_ms_per_image": 0.10447539062568012,
+      "std_ms_per_image": 0.003491861412816904,
+      "p95_ms_per_image": 0.10993863280788219,
+      "warmup_batches": 10,
+      "measured_batches": 50,
+      "batch_size": 128,
+      "scope": "model_only_after_device_transfer",
+      "peak_gpu_memory_mb": 689.650390625
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.14.1+cu132",
+    "torchvision": "0.29.1+cu132",
+    "cuda_runtime": "13.2",
+    "accelerator": "NVIDIA GeForce RTX 4060",
+    "git_commit": "4c4e22e65d76cb84765ae3ede5fdbfa349709ca4",
+    "git_dirty": true,
+    "source_tree_sha256": "518c3798329ae00ae5465fd424a51cb086eed65a0be092e59a4261b6e0e222a4",
+    "command": "scripts\\benchmark_checkpoint.py artifacts\\final_model.pt --data-dir data --device cuda --output results\\metrics\\final_inference_benchmark.json --batches 1 128"
+  }
+}

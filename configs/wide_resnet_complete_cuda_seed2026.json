@@ -1,0 +1,12 @@
+{
+  "name": "complete_cuda_wide_resnet_seed2026",
+  "model": "wide_resnet",
+  "model_kwargs": {"widen_factor": 4, "dropout": 0.0},
+  "data_dir": "data", "output_dir": "checkpoints", "device": "cuda",
+  "seed": 2026, "deterministic": false, "validation_fraction": 0.1,
+  "batch_size": 128, "workers": 2, "epochs": 30, "patience": 8,
+  "optimizer": "sgd", "learning_rate": 0.1, "momentum": 0.9,
+  "nesterov": true, "weight_decay": 0.0005, "scheduler": "cosine",
+  "augmentation": "standard", "mix": "none", "mix_alpha": 1.0,
+  "label_smoothing": 0.0, "tensorboard": true
+}

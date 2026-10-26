@@ -1,0 +1,110 @@
+{
+  "name": "optim_subset_ref",
+  "model": "resnet18",
+  "parameters": 11173962,
+  "best_epoch": 10,
+  "best_validation_accuracy": 0.3112,
+  "best_validation_loss": 1.8436312732696534,
+  "training_seconds": 65.74830230000043,
+  "inference_ms_per_image": 0.13375518229376362,
+  "inference_benchmark": {
+    "mean_ms_per_image": 0.13375518229376362,
+    "std_ms_per_image": 0.003372692899438183,
+    "p95_ms_per_image": 0.13843566406634977,
+    "warmup_batches": 5,
+    "measured_batches": 30,
+    "batch_size": 128,
+    "scope": "model_only_after_device_transfer"
+  },
+  "peak_gpu_memory_mb": 2268.9931640625,
+  "device": "cuda",
+  "epochs_completed": 10,
+  "checkpoint": "checkpoints\\optim_subset_ref\\best.pt",
+  "config": {
+    "data_dir": "data",
+    "output_dir": "checkpoints",
+    "device": "cuda",
+    "seed": 42,
+    "deterministic": false,
+    "validation_fraction": 0.1,
+    "batch_size": 128,
+    "workers": 2,
+    "epochs": 10,
+    "patience": 10,
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "weight_decay": 0.0005,
+    "scheduler": "cosine",
+    "augmentation": "standard",
+    "mix": "none",
+    "mix_alpha": 1.0,
+    "label_smoothing": 0.0,
+    "tensorboard": false,
+    "model_kwargs": {},
+    "train_limit": 4000,
+    "name": "optim_subset_ref",
+    "model": "resnet18"
+  },
+  "dataset": {
+    "train_size": 4000,
+    "validation_size": 5000,
+    "validation_fraction": 0.1,
+    "train_class_counts": {
+      "4": 400,
+      "0": 400,
+      "7": 400,
+      "8": 400,
+      "3": 400,
+      "2": 400,
+      "5": 400,
+      "1": 400,
+      "9": 400,
+      "6": 400
+    },
+    "validation_class_counts": {
+      "7": 500,
+      "2": 500,
+      "3": 500,
+      "9": 500,
+      "1": 500,
+      "8": 500,
+      "0": 500,
+      "5": 500,
+      "4": 500,
+      "6": 500
+    },
+    "class_names": [
+      "avion",
+      "automobile",
+      "oiseau",
+      "chat",
+      "cerf",
+      "chien",
+      "grenouille",
+      "cheval",
+      "bateau",
+      "camion"
+    ],
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "augmentation": "standard"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.14.1+cu132",
+    "torchvision": "0.29.1+cu132",
+    "cuda_runtime": "13.2",
+    "accelerator": "NVIDIA GeForce RTX 4060",
+    "git_commit": "4c4e22e65d76cb84765ae3ede5fdbfa349709ca4",
+    "command": "E:\\cours\\deep-learning\\src\\cifar10_project\\experiments.py optimisation --device cuda --epochs 10"
+  }
+}

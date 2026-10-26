@@ -1,0 +1,116 @@
+{
+  "name": "complete_cuda_wide_resnet_seed123",
+  "model": "wide_resnet",
+  "parameters": 2748890,
+  "best_epoch": 30,
+  "best_validation_accuracy": 0.935,
+  "best_validation_loss": 0.202859704297781,
+  "training_seconds": 522.2983855000002,
+  "inference_ms_per_image": 0.10504270833138207,
+  "inference_benchmark": {
+    "mean_ms_per_image": 0.10504270833138207,
+    "std_ms_per_image": 0.004737405855527631,
+    "p95_ms_per_image": 0.11062140624815697,
+    "warmup_batches": 5,
+    "measured_batches": 30,
+    "batch_size": 128,
+    "scope": "model_only_after_device_transfer"
+  },
+  "peak_gpu_memory_mb": 1036.29638671875,
+  "device": "cuda",
+  "epochs_completed": 30,
+  "checkpoint": "checkpoints\\complete_cuda_wide_resnet_seed123\\best.pt",
+  "config": {
+    "data_dir": "data",
+    "output_dir": "checkpoints",
+    "device": "cuda",
+    "seed": 123,
+    "deterministic": false,
+    "validation_fraction": 0.1,
+    "batch_size": 128,
+    "workers": 2,
+    "epochs": 30,
+    "patience": 8,
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "nesterov": true,
+    "weight_decay": 0.0005,
+    "scheduler": "cosine",
+    "augmentation": "standard",
+    "mix": "none",
+    "mix_alpha": 1.0,
+    "label_smoothing": 0.0,
+    "tensorboard": true,
+    "model_kwargs": {
+      "widen_factor": 4,
+      "dropout": 0.0
+    },
+    "name": "complete_cuda_wide_resnet_seed123",
+    "model": "wide_resnet"
+  },
+  "dataset": {
+    "train_size": 45000,
+    "validation_size": 5000,
+    "validation_fraction": 0.1,
+    "train_class_counts": {
+      "3": 4500,
+      "8": 4500,
+      "2": 4500,
+      "0": 4500,
+      "6": 4500,
+      "4": 4500,
+      "1": 4500,
+      "7": 4500,
+      "5": 4500,
+      "9": 4500
+    },
+    "validation_class_counts": {
+      "4": 500,
+      "2": 500,
+      "3": 500,
+      "8": 500,
+      "0": 500,
+      "6": 500,
+      "1": 500,
+      "5": 500,
+      "9": 500,
+      "7": 500
+    },
+    "class_names": [
+      "avion",
+      "automobile",
+      "oiseau",
+      "chat",
+      "cerf",
+      "chien",
+      "grenouille",
+      "cheval",
+      "bateau",
+      "camion"
+    ],
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "augmentation": "standard"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.14.1+cu132",
+    "torchvision": "0.29.1+cu132",
+    "cuda_runtime": "13.2",
+    "accelerator": "NVIDIA GeForce RTX 4060",
+    "git_commit": "4c4e22e65d76cb84765ae3ede5fdbfa349709ca4",
+    "git_dirty": true,
+    "source_tree_sha256": "518c3798329ae00ae5465fd424a51cb086eed65a0be092e59a4261b6e0e222a4",
+    "command": "E:\\cours\\deep-learning\\src\\cifar10_project\\train.py configs\\wide_resnet_complete_cuda_seed123.json"
+  }
+}

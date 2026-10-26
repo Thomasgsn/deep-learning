@@ -10,6 +10,8 @@ from cifar10_project.utils import count_parameters
 
 def main():
     batch = torch.randn(4, 3, 32, 32)
+    temporary_root = Path(".tmp")
+    temporary_root.mkdir(exist_ok=True)
     for name in ("mlp", "cnn", "resnet18", "wide_resnet"):
         model = build_model(name)
         output = model(batch)
@@ -17,7 +19,7 @@ def main():
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         metrics = run_epoch(model, [(batch, torch.tensor([0, 1, 2, 3]))], nn.CrossEntropyLoss(), torch.device("cpu"), optimizer)
         assert 0 <= metrics["accuracy"] <= 1 and metrics["loss"] > 0 and count_parameters(model) > 0
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=temporary_root) as directory:
             path = Path(directory) / "model.pt"
             torch.save(model.state_dict(), path)
             restored = build_model(name); restored.load_state_dict(torch.load(path, weights_only=True))
