@@ -1,6 +1,5 @@
 # Challenge Computer Vision CIFAR-10
 
-
 J'ai construit un benchmark reproductible de modèles de complexité croissante sur CIFAR-10. Mon protocole sépare strictement entraînement, validation et test : je sélectionne architectures et hyperparamètres sur 5 000 images de validation, puis j'évalue uniquement le modèle verrouillé sur les 10 000 images du test officiel.
 
 ## Accès rapide pour la correction
@@ -153,14 +152,6 @@ $env:PYTHONPATH = "src"
 ```
 
 Cette dernière commande reconstruit le tableau de tous les runs CUDA, avec une ligne par graine. La synthèse finale agrégée et sa règle de sélection sont conservées dans `results/comparisons/final_primary_comparison.csv` et `results/metrics/multiseed_summary.json`.
-
-### Reconstruire le rapport PDF
-
-```powershell
-.\.venv\Scripts\python.exe scripts\build_report_pdf.py
-```
-
-Le script lit [report/rapport.md](report/rapport.md), utilise les figures de `results/figures/` et écrit **`report/rapport_cifar10.pdf`**. Les dépendances PDF figurent dans `requirements.txt` et `requirements-lock.txt`.
 
 ## Organisation
 
